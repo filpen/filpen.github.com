@@ -1,0 +1,121 @@
+---
+layout: post
+title: ! 'DI: Instantiating dependencies based on runtime values'
+tags:
+- DI
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _syntaxhighlighter_encoded: '1'
+---
+<p>Most of the beginner’s examples of Dependency Injection show very straightforward cases, such as the following:</p>
+
+{% highlight csharp %}
+public interface IDependency
+{
+    void Method();
+}
+
+public class Dependent
+{
+    private IDependency m_Dependency;
+
+    public Dependent(IDependency dependency)
+    {
+        m_Dependency = dependency;
+    }
+
+    public void DoSomething()
+    {
+        m_Dependency.Method();
+    }
+}
+{% endhighlight %}
+
+<p>This is a typical example of constructor injection, where the Dependent class needs to call some method on the dependency. Constructor Injection keeps everything loosely coupled and it makes us sleep better, nonetheless when we try to implement Dependency Injection in our systems we find out pretty quickly that sometimes we do need to pass arguments to the dependency, be it primitive objects or additional dependencies. Suppose that we have a scenario where multiple implementations of IDependency exist and we want to create an instance based on a run-time argument. In this situation, we cannot use Constructor Injection, since while creating our Dependent instance we still do now know which dependency to instantiate. Intuitively, we want something like this:</p>
+
+{% highlight csharp %}
+public class DependencyOne : IDependency
+{
+    public void Method()
+    {
+        Console.WriteLine(&quot;DependencyOne.Method() called.&quot;);
+    }
+}
+
+public class DependencyTwo : IDependency
+{
+    public void Method()
+    {
+        Console.WriteLine(&quot;DependencyTwo.Method() called.&quot;);
+    }
+}
+
+public interface IDependency
+{
+    void Method();
+}
+
+public class Dependent
+{
+    public void DoSomething(string argument)
+    {
+        IDependency dependency = // Create dependency using argument
+        dependency.Method();
+    }
+}
+{% endhighlight %}
+
+<p><h4>Method Injection</h4>
+The most trivial solution is to use Method Injection and pass the IDependency as an argument.</p>
+{% highlight csharp %}
+public class Dependent
+{
+    public void DoSomething(IDependency dep)
+    {
+        IDependency dependency = dep;
+        dependency.Method();
+    }
+}
+{% endhighlight %}
+
+<p>
+In this case, the dependency is instantiated outside the class based on the string argument that was previously given as an argument to the method, which means that the class can now ignore how this instance is created. Looking at it more closely though, even if the Dependent class is ignorant about the instantiation of the dependency, we know we have to instantiate it somewhere. How would the client code using the Dependent class look like? Well, we would have to instantiate the dependency at runtime based on the string argument…sounds familiar?</p>
+
+<p>In the best case scenario, the client class is in the Composition Root of the application and is allowed to resolve the dependency directly, though in non-trivial applications this is rarely the case. Since we moved the creation of the dependency one step higher, the burden of instantiation is on the client and should it not be the Composition Root than we are left with the same issue; it follows that <strong>Method Injection is not an adequate solution for most cases when it comes to resolve dependencies at runtime</strong>.</p>
+
+<p>The limitedness of this solution brought us a bit closer to solving the problem though: what if we delegate the instantiation to some place in the Composition Root? That would allow us to instantiate the dependency in a point where we can access all implementations of the interface and compose it either manually or using our container of choice.</p>
+
+<p>We could create a class and give it the responsibility to instantiate our dependencies based on the runtime arguments that they need. From this description, our class looks like a factory…</p>
+
+<h4>Factory</h4>
+<p>The idea behind this approach is to delegate the creation of the object to a factory and let the factory instantiate the dependency. We could let the Dependent class be ignorant about the use of a factory and let its method require an IDependency instance, but what’s the point? The client code has to instantiate a factory anyway, so let’s give the factory as an argument to the method in the dependent class itself. Better yet, we can inject the factory in the constructor, effectively coming back to a Constructor Injection solution.</p>
+
+{% highlight csharp %}
+public interface IDependencyFactory
+{
+    IDependency Create(string argument);
+}
+
+public class Dependent
+{
+    private  IDependencyFactory m_DependencyFactory;
+
+    public Dependent(IDependencyFactory factory)
+    {
+        m_DependencyFactory = factory;
+    }
+
+    public void DoSomething(string argument)
+    {
+        IDependency dependency = factory.Create(argument);
+        dependency.Method();
+    }
+}
+{% endhighlight %}
+
+<p>As a result, we are not relying on the dependency itself, but on the factory: this solution is flexible and leaves room to decide how to effectively <a href="http://blog.ploeh.dk/2012/03/15/ImplementingAnAbstractFactory.aspx">implement the factory itself</a>.</p>
+
+<p>One could argue that we increased the complexity of our API: now we publish an additional abstraction, the factory, and our clients have to account for that. On the other hand, implementing a factory for this behavior means applying the Single Responsibility Principle and I see nothing wrong with it, independently from DI.</p>

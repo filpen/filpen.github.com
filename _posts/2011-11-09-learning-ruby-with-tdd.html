@@ -1,0 +1,181 @@
+---
+layout: post
+title: Learning Ruby with TDD
+tags:
+- Ruby
+- TDD
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+I was starting to have a look at the book from Kent Beck (<a title="Test Driven Development: by Example" href="http://www.amazon.com/Test-Driven-Development-Kent-Beck/dp/0321146530/ref=sr_1_1?ie=UTF8&amp;qid=1320793726&amp;sr=8-1">Test Driven Development: by Example</a>), shame on me that I didn't yet find the time to read it, and I thought I could use the occasion to get the basics of Ruby.
+
+Caution: I have no previous knowledge of Ruby. On one side, this means that I will write particularly bad code in ruby. On the other side, it is a nice opportunity to put TDD to good use and see if I can refactor some code as soon as I learn the "Ruby way" of doing stuff.
+
+The idea is to go through the basic Money example from Kent's book and just use Ruby for the code. Luckily Ruby comes with a basic unit testing framework, and I think it's more than enough to start. I will be using Textmate to code and run the tests and ruby 1.8.6 on OS X.
+<h4>Let's get started!</h4>
+A short summary for those who didn't read Kent's book: we are trying to define a class which should be able to perform different operations on money with different currencies. We're going test first, so the first piece of code we are going to write in Ruby is a unit test! Yay!
+
+To be able to access the unit testing classes we are going to need the file test/unit.rb. There are two ways to do this: one is the <em>require</em> method, and the other is the <em>include</em> method. To keep it short, we are going to use the require method because it just runs the file, but for a deeper analysis of the differences you can have a look <a title="here" href="http://ruby.about.com/b/2008/10/23/a-quick-peek-at-ruby-include-vs-require.htm">here</a>. Just a tip: <em>include</em> is a "false friend" for developers with C/C++/C# backgrounds, so be careful.
+
+Now that we've got that out of the way, we can write the test class with the first test (multiplication). I chose to write both tests and code in a file named Money.rb. Let's see how that looks in Ruby:
+
+{% highlight ruby %}
+require 'test/unit'
+
+class MoneyTests &lt; Test::Unit::TestCase
+  def test_multiplication
+    five = Dollar.new(5)
+    five.times(2)
+    assert_equal(10, five.amount)
+  end
+end
+{% endhighlight %}
+
+Ok that looks pretty easy: we defined a class MoneyTests which inherits from Test::Unit::TestCase. The class has a method test_multiplication that checks if a dollar multiplied by 2 is 10 dollars. Let's run the tests simply by going into a terminal and writing "ruby Money.rb", or from inside TextMate which I personally prefer (shortcut CMD + R), if only for the red/green colors jumping to my face at a key press.
+<pre>Loaded suite /Users/filippo/Documents/RubyTests/Money
+Started
+E
+Finished in 0.00031 seconds.
+
+  1) Error:
+test_multiplication(MoneyTests):
+NameError: uninitialized constant MoneyTests::Dollar
+method test_multiplication in Money.rb at line 7
+
+1 tests, 0 assertions, 0 failures, 1 errors</pre>
+&nbsp;
+
+It looks like we have some coding to do! We have to define a Dollar class with a constructor taking an integer as input, define a method times and a field amount. I'll give it a try:
+
+{% highlight ruby %}
+class Dollar
+  attr_reader :amount
+
+  def initialize(amount)
+    @amount = amount
+  end
+
+  def times(multiplicator)
+  end
+end
+{% endhighlight %}
+
+The class is defined but the test is failing with the following error:
+<pre>Loaded suite /Users/filippo/Documents/RubyTests/Money
+Started
+F
+Finished in 0.007974 seconds.
+
+  1) Failure:
+test_multiplication:18
+&lt;10&gt; expected but was
+&lt;5&gt;.
+
+1 tests, 1 assertions, 1 failures, 0 errors</pre>
+It turns out we have to implement the times method (no way!). I feel pretty comfortable in implementing an integer multiplication, so I'll go on and just implement a basic behavior without needing to fake the result:
+
+{% highlight ruby %}
+def times(multiplier)
+  @amount = amount * multiplier
+end
+{% endhighlight %}
+
+We can re-run the tests now and we get our first successful assert in ruby!
+<pre>Loaded suite /Users/filippo/Documents/RubyTests/Money
+Started
+.
+Finished in 0.000259 seconds.
+
+1 tests, 1 assertions, 0 failures, 0 errors</pre>
+Comforting, isn't it? Please take a moment to enjoy the <a title="cozy illusion of passing a test" href="http://en.wikipedia.org/wiki/Falsifiability">cozy illusion of a passing test</a>. Back? Great, because now it's time to change our multiplication API. What? Already? Yes, why, it's software we're writing, silly. In fact, as Kent notes in the book, it is a bit awkward to work with a field. Besides, wouldn't it be nice to be able to write the following?
+
+{% highlight ruby %}
+def test_multiplication
+  five = Dollar.new(5)
+  five.times(2)
+  assert_equal(10, five.amount)
+  five.times(3)
+  assert_equal(15, five.amount)
+end
+{% endhighlight %}
+
+Why do we <em>want</em>to do that? The devil lies in the details...look at how we named the variable containing the value of 5 dollars: five. We see it as immutable. We want it to be immutable. This in turn means that we have to return a new Dollar as the result of the multiplication, which would make the test code look like this:
+
+{% highlight ruby %}
+def test_multiplication
+  five = Dollar.new(5)
+  product = five.times(2)
+  assert_equal(10, product.amount)
+  product = five.times(3)
+  assert_equal(15, product.amount)
+end
+{% endhighlight %}
+
+Does it look good enough? We modified the test so that the API is a bit more predictable and easy to use, and we have to change the times method to return a new Dollar instance like this:
+
+{% highlight ruby %}
+def times(multiplier)
+  Dollar.new(self.amount * multiplier)
+end
+{% endhighlight %}
+
+Running the test we see that it is green again! The next step is testing for equality:
+
+{% highlight ruby %}
+def test_equality
+ assert(Dollar.new(5) == Dollar.new(5))
+end
+{% endhighlight %}
+
+As a side note, it looks like there are three equality operators in Ruby: "==", "eql?" and "equal?". According to <a title="this page" href="http://www.ruby-lang.org/en/documentation/ruby-from-other-languages/to-ruby-from-java/">this page</a> the equivalent for the Java equals() is the == operator, so I've decided to use it in the test. As the test is failing, we override the implementation of the == operator to return a comparison of the amount fields in the corresponding classes:
+
+{% highlight ruby %}
+def ==(dol)
+  self.amount == dol.amount
+end
+{% endhighlight %}
+
+This implementation makes our test pass, which in turn should make us happy! Now that we implemented the equality operator, we can make our multiplication test even more clear:
+
+{% highlight ruby %}
+def test_multiplication
+  five = Dollar.new(5)
+  product = five.times(2)
+  assert_equal(Dollar.new(10), product)
+  product = five.times(3)
+  assert_equal(Dollar.new(15), product)
+end
+{% endhighlight %}
+
+Actually, we can also get rid of product:
+
+{% highlight ruby %}
+def test_multiplication
+  five = Dollar.new(5)
+  assert_equal(Dollar.new(10), five.times(2))
+  assert_equal(Dollar.new(15), five.times(3))
+end
+{% endhighlight %}
+
+At this point it is time to get rid of the amount field, because it is only used by Dollar. This one is a bit more tricky and it took me a bit longer to port to Ruby. The new Dollar class looks like this:
+
+{% highlight ruby %}
+class Dollar
+  def initialize(amount)
+    @amount = amount
+  end
+
+  def times(multiplier)
+    Dollar.new(@amount * multiplier)
+  end
+
+  def ==(anotherDollar)
+    @amount == anotherDollar.instance_variable_get("@amount")
+  end
+end
+{% endhighlight %}
+
+<em>amount</em> is now an instance variable, and to access the instance variable from the other dollar object anotherDollar I had to use the method instance_variable_get. So I learned that you can actually access any instance variable of an object with this method. Nifty!

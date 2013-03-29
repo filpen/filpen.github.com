@@ -1,0 +1,69 @@
+---
+layout: post
+title: Continuous Integration with Hudson
+tags:
+- CI
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+After hours spent painfully integrating existing projects in our automatic build automation process at work, it is a good time to spend a couple of words on the topic of continuous integration. A good time for me to help keeping my sanity in this jungle of project dependencies that the compiler is resolving without any issues <a href="http://www.codinghorror.com/blog/2007/03/the-works-on-my-machine-certification-program.html">on the original developer’s machine</a>, but fails miserably on a neutral environment, yet at the same time an opportunity to revisit the good old principles of continuous integration.
+<h3>What’s continuous integration, anyway?</h3>
+From <a href="http://en.wikipedia.org/wiki/Continuous_integration">Wikipedia</a>:
+<blockquote>In <a href="http://en.wikipedia.org/wiki/Software_engineering">software engineering</a>, <strong>continuous integration</strong> (<strong>CI</strong>) implements <em>continuous</em> processes of applying quality control - small pieces of effort, applied frequently. Continuous integration aims to improve the quality of software, and to reduce the time taken to deliver it, by replacing the traditional practice of applying quality control <em>after</em> completing all development.</blockquote>
+The concept of continuous integration has its roots in the <a href="http://en.wikipedia.org/wiki/Extreme_Programming">Extreme Programming</a> community and is based on several <a href="http://martinfowler.com/articles/continuousIntegration.html#PracticesOfContinuousIntegration">practices</a> describing the key objectives to strive for in order to achieve continuous integration:
+<ol>
+	<li>Maintain a single source repository</li>
+	<li>Automate the build</li>
+	<li>Make your build self-testing</li>
+	<li>Everyone commits to mainline every day</li>
+	<li>Every commit should build the mainline on an integration machine</li>
+	<li>Keep the build fast</li>
+	<li>Test in a clone of the production environment</li>
+	<li>Make it easy for anyone to get the latest executable</li>
+	<li>Everyone can see what’s happening</li>
+	<li>Automate deployment</li>
+</ol>
+While most of them are self explanatory, lots of different tools are available nowadays to help a team implement these practices. Quite obviously, you won’t find a tool that magically materializes automated tests out of thin air for your existing code base: however, one can come a long way in just a matter of minutes, having a build automation software set up in just a couple of clicks.
+
+I will tell you how we did that for our .NET projects using <a href="http://hudson-ci.org/">Hudson</a>.
+<h3>Meet Hudson the butler</h3>
+Hudson is an open-source continuous integration server that can be set up in no time. It <a href="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/butler.png"><img style="display: inline; margin-left: 0px; margin-right: 0px; border-width: 0px;" title="butler" src="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/butler_thumb.png" border="0" alt="butler" width="100" height="100" align="right" /></a>can be easily tested thanks to Java Web Start at the following address: <a title="https://hudson.dev.java.net/hudson.jnlp" href="https://hudson.dev.java.net/hudson.jnlp">https://hudson.dev.java.net/hudson.jnlp</a>.
+
+Once the Java Web Start application has launched, point your browser to <a href="http://localhost:8080">http://localhost:8080</a> and you will be promptly presented with Hudson’s dashboard.
+
+<a href="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/butler.png"> </a><a href="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/hudson_dashboard.png"><img style="display: block; float: none; margin-left: auto; margin-right: auto; border: 0px;" title="hudson_dashboard" src="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/hudson_dashboard_thumb.png" border="0" alt="hudson_dashboard" width="604" height="404" /></a>
+
+That’s it! We can already start configuring our first job: as an example, we are going to build <a href="http://compositewpf.codeplex.com/">Prism</a>. As noted in the source code page, Prism’s SVN URL for the latest release is <a href="https://prism.svn.codeplex.com/svn"><strong>https://prism.svn.codeplex.com/svn</strong></a><strong>/V4</strong>:<strong> </strong>we will just write it down for the moment.
+
+Let’s click on New Job and select <strong>Build a free-style software project </strong>from the next page. Don’t forget to set a name for the project before clicking ok, I just named it (drum roll…) Prism.  We are now welcomed by the job configuration page! We are going to focus on the Source Code Management section: as a start, we want to check out the project from the SVN repository. In order to do so, click on Subversion and enter the repository URL that we previously found:
+
+<a href="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/SVN.png"><img style="display: block; float: none; margin-left: auto; margin-right: auto; border: 0px;" title="SVN" src="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/SVN_thumb.png" border="0" alt="SVN" width="604" height="222" /></a>
+
+At this point, we can Save our configuration and click on Build Now in the project’s page. Notice the Workspace item in the menu and on the dashboard of the project: there you will see the whole project structure once Prism has finished downloading.
+
+<a href="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/BuildNow.png"><img style="display: block; float: none; margin-left: auto; margin-right: auto; border: 0px;" title="BuildNow" src="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/BuildNow_thumb.png" border="0" alt="BuildNow" width="404" height="332" /></a>
+
+While Prism is downloading you can actually have a look at <a href="http://compositewpf.codeplex.com/">Prism’s website</a> if you don’t know what you’re downloading.
+<blockquote>Prism (formerly known as Composite Application Guidance for WPF and Silverlight) provides guidance and a re-usable code library for building modular, flexible WPF and Silverlight applications.</blockquote>
+When the download is complete, we can go on with the project configuration. If we look under the Build section of the configuration page and try to add a build step clicking on the relative button, we find a couple of options: since this is a .NET project and we have no batch file set up to build it for us, we have to use MSBuild, that is not supported out of the box. But fear not! There’s a plugin for that. It is sufficient to go back to Hudson’s dashboard, to click on Manage Hudson and finally Manage Plugins. From here you can easily install the MSBuild plugin and restart Hudson. One thing is left to do: set the local MSBuild path, so that Hudson can find it.
+
+Under Manage Hudson –&gt; Configure System you will find a section named <strong>MSBuild Builder</strong> where you can add the path to your local MSBuild.exe, for instance C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe.
+
+We’re finally ready to build! We’re going to add a build step in the Prism project configuration page, choose our local MSBuild version we just configured and point it to the solution to build.
+
+<a href="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/build.png"><img style="display: block; float: none; margin-left: auto; margin-right: auto; border: 0px;" title="build" src="http://tamingcode.com/img/OdetoContinuousIntegration_11DE8/build_thumb.png" border="0" alt="build" width="504" height="208" /></a>
+
+Just a word of caution: if you are using an express edition of visual studio you’re not going to be able to compile the MSTest projects inside the solution. In this case, just remove these projects from the solution.
+
+Once the configuration has been saved you can again click on Build Now and Hudson will try to build our Prism solution. In case the build failed, you’ll notice that your last build in the <strong>Build History </strong>area has a red icon instead of a blue one. What I suggest you to do is to go to that build’s page and click on Console Output which will show you exactly what went wrong.
+<h3>That’s fine, but where’s the “continuous” part of it?</h3>
+We have laid the foundations of our continuous integration process. You probably already noticed that the configuration page contains lots of different settings, for example the <strong>Build Triggers </strong>one. Here you can specify when the build should be started. Every night at 4 AM? Every hour but only if changes in the repository were detected? You name it.
+
+How are you supposed to notice if the build breaks? For starters, there’s a built in support for email notifications: that means you can send an email to the developers who broke the build, so that they can notice right away when something is not right. Alternatively you could notify your <a href="http://www.nabaztag.com/en/index.html">Nabaztag</a> or publish the results to a Google Calendar or whatever.
+
+The possibilities are almost endless, thanks to Hudson’s extensibility. The <a href="http://wiki.hudson-ci.org/display/HUDSON/Plugins">list of plugins</a> is indeed impressive: you can keep track of your unit test results having them published on your project’s page as a graph, you can track the TODOs in your source code, publish your project artifacts so that they are ready for release and much more.
+
+All you have to do is configure everything once: it will take some time, especially for legacy projects needing some dependency cleanup, nevertheless it is a pain you have to suffer just one time. And this is of course only the tip of the iceberg; from here on, the roads of continuous integration are open to you.
