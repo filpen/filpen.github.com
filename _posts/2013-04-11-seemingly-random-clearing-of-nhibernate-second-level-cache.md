@@ -2,8 +2,9 @@
 layout: post
 title: "Seemingly random clearing of NHibernate second level cache"
 description: ""
-category: 
+category:
 tags: []
+date: 2013-04-11 00:00 UTC
 ---
 {% include JB/setup %}
 
@@ -21,7 +22,7 @@ While checking NHibernate sources reveals that there is an half-ported feature o
 
 {% highlight csharp %}
 /// <summary>
-/// Create an action that will evict collection and entity regions based on queryspaces (table names).  
+/// Create an action that will evict collection and entity regions based on queryspaces (table names).
 /// </summary>
 public BulkOperationCleanupAction(ISessionImplementor session, ISet<string> querySpaces)
 {
