@@ -9,6 +9,10 @@
 .navbar .nav {
   float: right; }
 
+.date {
+  color: #999;
+  padding-bottom: 20px; }
+
 /* posts index */
 .post > h3.title {
   position: relative;
