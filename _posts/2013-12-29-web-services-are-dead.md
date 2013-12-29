@@ -4,7 +4,7 @@ title: "Web services are dead, long live web services!"
 description: ""
 category:
 tags: []
-date: 2013-12-29 15:51
+date: 2013-12-29 15:51 UTC
 ---
 {% include JB/setup %}
 
