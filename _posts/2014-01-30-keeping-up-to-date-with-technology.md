@@ -9,7 +9,7 @@ date: 2014-01-30 22:07 UTC
 {% include JB/setup %}
 
 
-I have been asked for advice on how to wade through the masses of information available online to developers. Every day there is something knew and everybody wants your time, vendors try to convince you that their products are the best and will live forever then dump a product shortly after (*cough cough* silverlight *cough cough*). So how can one make sense of this huge mass of information?
+I have been asked for advice on how to wade through the masses of information available online to developers. Every day there is something new and everybody wants your time, vendors try to convince you that their products are the best and will live forever then dump a product shortly after (*cough cough* silverlight *cough cough*). So how can one make sense of this huge mass of information?
 
 First of all, **filter**. I can't stress this enough: a fast-paced industry like ours leads to technologies and frameworks being born and dying almost on a daily basis (I am looking at you, JavaScript frameworks). Following every trend is like drinking from the firehose and would drive anyone crazy over a longer period of time. There are exceptions to this rule, obviously: before knowing what to filter out, you want to find out what you are interested in, so it makes sense to look around occasionally.
 
