@@ -6,7 +6,6 @@ category:
 tags: []
 date: 2014-01-30 22:07 UTC
 ---
-{% include JB/setup %}
 
 
 I have been asked for advice on how to wade through the masses of information available online to developers. Every day there is something new and everybody wants your time, vendors try to convince you that their products are the best and will live forever then dump a product shortly after (*cough cough* silverlight *cough cough*). So how can one make sense of this huge mass of information?

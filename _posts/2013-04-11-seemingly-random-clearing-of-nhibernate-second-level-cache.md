@@ -6,7 +6,6 @@ category:
 tags: []
 date: 2013-04-11 00:00 UTC
 ---
-{% include JB/setup %}
 
 Imagine spending days carefully setting up and fine tuning NHibernate caches, the whole lot of them: session, second level and query cache. Suppose you have spent way too long in finding out how to set up SysCache2 and query notifications in SQL Server, how to create a perfect combination of permissions so that everything works smoothly. After the web app has been deployed to the test system, you receive a call asking you to check the behavior of the second level cache that may be the cause of a timeout.
 

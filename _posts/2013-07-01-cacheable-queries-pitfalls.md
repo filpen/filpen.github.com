@@ -6,7 +6,6 @@ category:
 tags: []
 date: 2013-07-01 19:00 UTC
 ---
-{% include JB/setup %}
 
 
 Cacheable queries are a powerful tool in the belt of the caching-aware developer. They save the results of a query as a collection of identifiers, so that if the same query is executed again we can avoid hitting the database and just return the previously loaded results. Even though this sounds simple, there are two common pitfalls when using it: one concerns performance directly, and the other makes your cache return stale results.

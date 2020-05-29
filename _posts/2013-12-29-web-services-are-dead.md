@@ -6,7 +6,6 @@ category:
 tags: []
 date: 2013-12-29 15:51 UTC
 ---
-{% include JB/setup %}
 
 ASMX web services have been defined a legacy technology for a while now. In fact, Microsoft itself put a disclaimer on the MSDN documentation page regarding ASMX.
 
